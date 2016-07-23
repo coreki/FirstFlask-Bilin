@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template,session,redirect,url_for,abort,flash,request,make_response
 
 from . import main
-from .forms import NameForm,EditProfileForm,EditProfileAdminForm,PostForm,CommentForm
+from .forms import NameForm,ChangePasswordForm,EditProfileForm,EditProfileAdminForm,PostForm,CommentForm
 from .. import db
 from ..models import User,Role,Permission,Post,Comment
 
@@ -57,6 +57,24 @@ def user(username):
     posts=user.posts.order_by(Post.timestamp.desc()).all()
     return render_template('user.html',user=user,posts=posts)
 
+
+@main.route('/change-password',methods=['GET','POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if current_user.verify_password(form.old_password.data):
+            current_user.password = form.new_password.data
+            db.session.add(current_user)
+            flash('Your password has been changed.')
+        else:
+            flash('Old password is error.')
+
+        return redirect(url_for('.change_password'))
+    return render_template('change_password.html',form=form)
+
+
+
 @main.route('/edit-profile',methods=['GET','POST'])
 @login_required
 def edit_profile():
@@ -98,6 +116,7 @@ def edit_profile_admin(id):
     form.location.data = user.location
     form.about_me.data = user.about_me
     return render_template('edit_profile.html',form=form,user=user)
+
 
 @main.route('/manage-user')
 @login_required

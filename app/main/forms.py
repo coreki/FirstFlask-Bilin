@@ -1,11 +1,17 @@
 from flask.ext.wtf import Form
-from wtforms import StringField,SubmitField,BooleanField,SelectField,TextAreaField
-from wtforms.validators import Required,Length,Email,Regexp,ValidationError
+from wtforms import StringField,SubmitField,BooleanField,SelectField,TextAreaField,PasswordField
+from wtforms.validators import Required,Length,Email,Regexp,EqualTo,ValidationError
 from ..models import Role,User
 from flask.ext.pagedown.fields import PageDownField
 
 class NameForm(Form):
     name = StringField('Whar is your name?',validators=[Required()])
+    submit = SubmitField('Submit')
+
+class ChangePasswordForm(Form):
+    old_password = PasswordField('Old Password', validators=[Required()])
+    new_password = PasswordField('New Password', validators=[Required(),EqualTo('new_password2','Passwords must match')])
+    new_password2 = PasswordField('Confirm Password', validators=[Required()])
     submit = SubmitField('Submit')
 
 class EditProfileForm(Form):
@@ -38,6 +44,7 @@ class EditProfileAdminForm(Form):
     def validate_username(self,field):
         if field.data != self.user.username and User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use')
+
 
 class PostForm(Form):
     body = PageDownField('What is on your mind?',validators=[Required()])
